@@ -9,6 +9,8 @@ print(df.head())
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+#Note to self, add more diagrams to analise each part!
+
 # Univariate Analysis
 sns.set_theme(style="whitegrid")
 
@@ -28,6 +30,7 @@ plt.title("Gender Count")
 plt.xticks([0, 1], ['Male', 'Female'])
 plt.tight_layout()
 plt.savefig("gender_distribution.png")
+plt.show()
 plt.close()
 
 plt.figure(figsize=(8, 5))
