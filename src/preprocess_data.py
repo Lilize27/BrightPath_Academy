@@ -1,5 +1,7 @@
 import pandas as pd
 
+import numpy as np
+from sklearn.model_selection import train_test_split
 
 df = pd.read_csv("_data/Student_performance_data.csv")
 
@@ -48,9 +50,8 @@ for col in numeric_cols:
     plt.title(f'Boxplot of {col}')
     plt.show()
 
- #  numeric_cols = df.select_dtypes(include=['int64', 'float64']).columns
+ 
 
-# Define the IQR outlier function
 def find_outliers_iqr(data, column):
     Q1 = data[column].quantile(0.25)
     Q3 = data[column].quantile(0.75)
@@ -60,7 +61,7 @@ def find_outliers_iqr(data, column):
     outliers = data[(data[column] < lower) | (data[column] > upper)]
     return outliers
 
-# Run the check
+
 print("\n Checking for outliers:")
 for col in numeric_cols:
     outliers = find_outliers_iqr(df, col)
@@ -77,3 +78,32 @@ print("Volunteering:", df['Volunteering'].unique())
 
 
 #Verdict is to keep outliers as there are no unique or error values.
+
+print(df.info())
+print(df.isnull().sum())  # check for missing values
+print(df.duplicated().sum())
+
+df.dropna(inplace=True)  # Drop rows with missing values
+
+df.drop(columns=['StudentID'], inplace=True)
+
+df['GradeClass'] = pd.to_numeric(df['GradeClass'], errors='coerce')
+
+from sklearn.preprocessing import MinMaxScaler
+
+scaler = MinMaxScaler()
+df[['StudyTimeWeekly', 'Absences', 'GPA']] = scaler.fit_transform(df[['StudyTimeWeekly', 'Absences', 'GPA']]) #rescales for better performance
+
+X = df.drop('GradeClass', axis=1)
+y = df['GradeClass']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, 
+                                                    test_size=0.2, 
+                                                    random_state=42, 
+                                                    stratify=y)  # keeps class balance
+
+train_df = pd.concat([X_train, y_train], axis=1)
+test_df = pd.concat([X_test, y_test], axis=1)
+
+train_df.to_csv("cleaned_train_data.csv", index=False)
+test_df.to_csv("cleaned_test_data.csv", index=False)
