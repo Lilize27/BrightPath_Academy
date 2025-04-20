@@ -84,6 +84,7 @@ plt.xlabel("Parental Education Level")
 plt.ylabel("Number of Students")
 plt.legend(title="Parental Support", bbox_to_anchor=(1.05, 1), loc='upper left')
 plt.tight_layout()
+plt.savefig("ParentSupport_vs_Education.png")
 plt.show()
 
 import seaborn as sns
@@ -93,10 +94,12 @@ sns.boxplot(x='Sports', y='GPA', data=df, palette='Set2')
 plt.title('GPA Distribution by Sports Participation')
 plt.xlabel('Sports Participation (0 = No, 1 = Yes)')
 plt.ylabel('GPA')
+plt.savefig("GPA-Distribution_vs_Sport.png")
 plt.show()
 
 sns.stripplot(x='Sports', y='GPA', data=df, jitter=True, palette='Set1')
 plt.title('Individual GPA Points by Sports Participation')
 plt.xlabel('Sports Participation (0 = No, 1 = Yes)')
 plt.ylabel('GPA')
+
 plt.show()
