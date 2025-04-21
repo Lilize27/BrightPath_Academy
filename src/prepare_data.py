@@ -7,7 +7,7 @@ print(df.head())
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-#Note to self, add more diagrams to analise each part!
+#Note to self, add more diagrams to analyse each part!
 
 # Univariate Analysis
 sns.set_theme(style="whitegrid")
