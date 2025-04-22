@@ -12,7 +12,7 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
 
 # Load data and models
-data = pd.read_csv("../_data/cleaned_test_data.csv")
+data = pd.read_csv("cleaned_test_data.csv")
 X = data.drop("GradeClass", axis=1)
 y_true = data["GradeClass"]
 
@@ -20,8 +20,8 @@ grade_map = {0: "A", 1: "B", 2: "C", 3: "D", 4: "F"}
 y_true_labels = y_true.map(grade_map)
 
 # Load models
-rf_model = joblib.load("artifacts/random_forest_model.pkl")
-xgb_model = joblib.load("artifacts/xgb_model.pkl")
+rf_model = joblib.load("random_forest_model.pkl")
+xgb_model = joblib.load("xgb_model.pkl")
 
 rf_preds = pd.Series(rf_model.predict(X)).map(grade_map)
 xgb_preds = pd.Series(xgb_model.predict(X)).map(grade_map)
