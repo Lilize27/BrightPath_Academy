@@ -1,65 +1,120 @@
 import dash
-from dash import dcc, html, Input, Output
+from dash import dcc, html, Input, Output, State
 import dash_bootstrap_components as dbc
 import pandas as pd
 import joblib
+import plotly.express as px
 
-# Load data and model
-data = pd.read_csv("_data/cleaned_test_data.csv")  # Adjust path if needed
-model = joblib.load("artifacts/random_forest_model.pkl")  # or xgb_model.pkl
-
+# Load data and models
+data = pd.read_csv("../_data/cleaned_test_data.csv")
 X = data.drop("GradeClass", axis=1)
 y_true = data["GradeClass"]
-predictions = model.predict(X)
 
 grade_map = {0: "A", 1: "B", 2: "C", 3: "D", 4: "F"}
 y_true_labels = y_true.map(grade_map)
-y_pred_labels = pd.Series(predictions).map(grade_map)
+
+# Load models
+rf_model = joblib.load("../artifacts/random_forest_model.pkl")
+xgb_model = joblib.load("../artifacts/xgb_model.pkl")
+
+rf_preds = pd.Series(rf_model.predict(X)).map(grade_map)
+xgb_preds = pd.Series(xgb_model.predict(X)).map(grade_map)
 
 # Initialize Dash app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
 
+# Layout
 app.layout = dbc.Container([
-    html.H1("BrightPath Student Grade Predictor", className="text-center mt-4 mb-4"),
-    
-    html.P("This dashboard shows the predictions made by the Random Forest model on test data."),
+    html.H1("BrightPath Student Grade Predictor", className="text-center my-4"),
+
+    html.P("This dashboard allows comparison of predictions made by the Random Forest and XGBoost models."),
 
     dbc.Row([
         dbc.Col([
-            html.H5("Sample Prediction Table:"),
-            dcc.Graph(
-                figure={
-                    'data': [{
-                        'type': 'table',
-                        'header': {'values': list(X.head().columns) + ['Actual', 'Predicted']},
-                        'cells': {
-                            'values': [X[col].head().tolist() for col in X.columns] + 
-                                      [y_true_labels.head().tolist(), y_pred_labels.head().tolist()]
-                        }
-                    }]
-                }
+            html.Label("Select Model:"),
+            dcc.Dropdown(
+                id='model-select',
+                options=[
+                    {'label': 'Random Forest', 'value': 'rf'},
+                    {'label': 'XGBoost', 'value': 'xgb'}
+                ],
+                value='rf',
+                clearable=False
             )
+        ], width=4)
+    ], className="mb-4"),
+
+    dbc.Row([
+        dbc.Col([
+            dcc.Graph(id='prediction-table')
         ])
     ]),
 
     dbc.Row([
         dbc.Col([
             html.H5("Model Performance:"),
-            html.Div([
-                html.P(f"Accuracy: {(y_true == predictions).mean():.2f}"),
-                html.Img(src="/assets/RandomForest_Confusion-matrix_Heat.png", style={"width": "100%"})
-            ])
+            html.Div(id='accuracy-output', className='mb-2'),
+            html.Img(id='conf-matrix-img', style={"width": "100%"})
+        ])
+    ]),
+
+    dbc.Row([
+        dbc.Col([
+            html.H5("Prediction Distribution:"),
+            dcc.Graph(id='prediction-distribution')
         ])
     ])
-])
+], fluid=True)
 
-# run this code in anaconda prompt
-#if __name__ == "__main__":
-#    app.run(debug=True)
+# Callbacks
+@app.callback(
+    [Output('prediction-table', 'figure'),
+     Output('accuracy-output', 'children'),
+     Output('conf-matrix-img', 'src'),
+     Output('prediction-distribution', 'figure')],
+    Input('model-select', 'value')
+)
+def update_output(model_name):
+    if model_name == 'rf':
+        preds = rf_preds
+        acc = (y_true_labels == preds).mean()
+        img_src = "/assets/RandomForest_Confusion-matrix_Heat.png"
+    else:
+        preds = xgb_preds
+        acc = (y_true_labels == preds).mean()
+        img_src = "/assets/XGBoost_Confusion-matrix_Heat.png"
 
-#if __name__ == "__main__":
-#    app.run_server(debug=False, host="0.0.0.0", port=8080)
+    # Table figure
+    table_fig = {
+        'data': [ {
+            'type': 'table',
+            'header': {
+                'values': list(X.head().columns) + ['Actual', 'Predicted'],
+                'fill': {'color': 'orange'},
+                'align': 'left'
+            },
+            'cells': {
+                'values': [X[col].head().tolist() for col in X.columns] +
+                          [y_true_labels.head().tolist(), preds.head().tolist()],
+                'align': 'left'
+            }
+        }]
+    }
 
+    # Bar chart
+    df_plot = pd.DataFrame({
+        "Actual": y_true_labels,
+        "Predicted": preds
+    })
+
+    dist_fig = px.histogram(df_plot.melt(var_name='Type', value_name='Grade'),
+                            x='Grade', color='Type', barmode='group',
+                            title="Grade Distribution: Actual vs Predicted",
+                            color_discrete_map={"Actual": "green", "Predicted": "orange"})
+
+    return table_fig, f"Accuracy: {acc:.2f}", img_src, dist_fig
+
+# Run app
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=False)
