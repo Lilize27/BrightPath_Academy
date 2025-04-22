@@ -5,6 +5,10 @@ import pandas as pd
 import joblib
 import plotly.express as px
 
+# Initialize Dash app
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+server = app.server
+
 # Load data and models
 data = pd.read_csv("../_data/cleaned_test_data.csv")
 X = data.drop("GradeClass", axis=1)
@@ -19,10 +23,6 @@ xgb_model = joblib.load("../artifacts/xgb_model.pkl")
 
 rf_preds = pd.Series(rf_model.predict(X)).map(grade_map)
 xgb_preds = pd.Series(xgb_model.predict(X)).map(grade_map)
-
-# Initialize Dash app
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-server = app.server
 
 # Layout
 app.layout = dbc.Container([
@@ -117,4 +117,5 @@ def update_output(model_name):
 
 # Run app
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080, debug=False)
+    port = int(os.environ.get("PORT", 8050))  
+    app.run(host="0.0.0.0", port=port, debug=False)
