@@ -6,4 +6,4 @@ seaborn
 dash
 dash-bootstrap-components
 joblib
-gunicorn==20.1.0  # <-- Add this line
+numpy
