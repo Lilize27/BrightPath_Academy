@@ -12,7 +12,7 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
 
 # Load data and models
-data = pd.read_csv("../_data/cleaned_test_data.csv")
+data = pd.read_csv("cleaned_test_data.csv")
 X = data.drop("GradeClass", axis=1)
 y_true = data["GradeClass"]
 
